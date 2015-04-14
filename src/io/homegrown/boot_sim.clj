@@ -162,6 +162,7 @@
   (if (and uri validate-fn test-name lookup-fn)
     (do
       (require (symbol (namespace validate-fn)))
+      (require (symbol (namespace lookup-fn)))
       (let [db     (d/db (d/connect uri))
             sim-id ((resolve lookup-fn) db test-name)
             errors ((resolve validate-fn) uri sim-id)]
