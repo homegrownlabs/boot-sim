@@ -6,12 +6,13 @@
 
 (deftask bootstrap
   "Bootstrap a Datomic database with simulation schema."
-  [d uri          URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f bootstrap-fn FN  sym "Fully-qualified database bootstrap function that takes a single URI argument (e.g. simulation.db/bootstrap!)"]
+  [d uri          URI str "Datomic database URI."
+   f bootstrap-fn FN  sym "Fully-qualified database bootstrap function (takes: uri)."]
   (if (and uri bootstrap-fn)
     (do
       (require (symbol (namespace bootstrap-fn)))
-      ((resolve bootstrap-fn) uri))
+      ((resolve bootstrap-fn) uri)
+      (println "Successfully bootstrapped" uri))
     (do
       (if-not uri (boot.util/fail "The --uri option is required!\n"))
       (if-not bootstrap-fn (boot.util/fail "The --bootstrap-fn option is required!\n"))
@@ -19,15 +20,16 @@
 
 (deftask create-model
   "Create a model to generate a test against."
-  [d uri         URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f create-fn   FN  sym "Fully-qualified model create function that takes four options; uri, name, description and type (e.g. simulation.model/create-model!)."
-   n name        VAL str "Model name."
+  [d uri         URI str "Datomic database URI."
+   f create-fn   FN  sym "Fully-qualified model create function (takes: uri, name, description, type)."
+   n model-name  VAL str "Model name."
    t type        KW  kw  "Fully-qualified model type (e.g. :model.type/sample)."
    _ description VAL str "Description of model (optional)."]
   (if (and uri create-fn name type)
     (do
       (require (symbol (namespace create-fn)))
-      ((resolve create-fn) uri name description type))
+      ((resolve create-fn) uri name description type)
+      (println "Successfully created model" (pr-str model-name)))
     (do
       (if-not uri (boot.util/fail "The --uri option is required!\n"))
       (if-not create-fn (boot.util/fail "The --create-fn option is required!\n"))
@@ -37,8 +39,8 @@
 
 (deftask list-models
   "List the available models in the database."
-  [d uri    URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f list-fn FN  sym "Fully qualified function that returns model entities (takes: db)"]
+  [d uri    URI str "Datomic database URI."
+   f list-fn FN  sym "Fully qualified function that returns model entities (takes: db)."]
   (if (and uri list-fn)
     (let [db     (d/db (d/connect uri))
           _      (require (symbol (namespace list-fn)))
@@ -54,17 +56,18 @@
 
 (deftask create-test
   "Create a test from a given model."
-  [d uri         URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f create-fn   FN  sym "Fully qualified function that creates a test (takes: uri, model-name, test-name, duration, agent-count)"
-   m model-name  VAL str "The model name to generate the test from"
-   n test-name   VAL str "The name of the test"
-   u host-name   URI str "URI of the target system (e.g. http://dockerhost:8080)"
-   t duration    MIN int "The number of minutes to run"
-   c concurrency N   int "The number of agents to run simultaneously"]
+  [d uri         URI str "Datomic database URI."
+   f create-fn   FN  sym "Fully qualified function that creates a test (takes: uri, model-name, test-name, duration, agent-count)."
+   m model-name  VAL str "The model name to generate the test from."
+   n test-name   VAL str "The name of the test."
+   u host-name   URI str "URI of the target system (e.g. http://dockerhost:8080)."
+   t duration    MIN int "The number of minutes to run."
+   c concurrency N   int "The number of agents to run simultaneously."]
   (if (and uri model-name test-name host-name duration concurrency)
     (do
       (require (symbol (namespace create-fn)))
-      ((resolve create-fn) uri model-name test-name host-name duration concurrency))
+      ((resolve create-fn) uri model-name test-name host-name duration concurrency)
+      (println "Successfully created test" (pr-str test-name)))
     (do
       (if-not uri (boot.util/fail "The --uri option is required!\n"))
       (if-not create-fn (boot.util/fail "The --create-fn option is required!\n"))
@@ -77,8 +80,8 @@
 
 (deftask list-tests
   "List the available tests in the database."
-  [d uri    URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f list-fn FN  sym "Fully qualified function that returns test entities (takes: db)"]
+  [d uri    URI str "Datomic database URI."
+   f list-fn FN  sym "Fully qualified function that returns test entities (takes: db)."]
   (if (and uri list-fn)
     (let [db     (d/db (d/connect uri))
           _      (require (symbol (namespace list-fn)))
@@ -94,7 +97,7 @@
 
 (deftask run-sim
   "Run a sim from a given test."
-  [d uri         URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
+  [d uri         URI str "Datomic database URI."
    f run-fn      FN  sym "Fully-qualified function that runs a sim (takes: uri, test-name, processes, acceleration-factor)."
    n test-name   VAL str "Test name to simulate."
    p processes   N   int "How many Clojure agents will host the sim agents?"
@@ -102,7 +105,8 @@
   (if (and uri run-fn test-name processes speed)
     (do
      (require (symbol (namespace run-fn)))
-     ((resolve run-fn) uri test-name processes speed))
+     ((resolve run-fn) uri test-name processes speed)
+     (println "Successfully ran sim for test" (pr-str test-name)))
     (do
       (if-not uri (boot.util/fail "The --uri option is required!\n"))
       (if-not run-fn (boot.util/fail "The --run-fn option is required!\n"))
@@ -113,8 +117,8 @@
 
 (deftask list-sims
   "List the available sims in the database."
-  [d uri       URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
-   f list-fn   FN  sym "Fully qualified function that returns sim entities (takes: db, test-query <may be nil>)"
+  [d uri       URI str "Datomic database URI."
+   f list-fn   FN  sym "Fully qualified function that returns sim entities (takes: db, test-query <may be nil>)."
    n test-name VAL str "Test name to limit results by."]
   (if (and uri list-fn)
     (let [db     (d/db (d/connect uri))
@@ -134,9 +138,9 @@
 
 (deftask validate-sim
   "Validate a given sim."
-  [d uri         URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
+  [d uri         URI str "Datomic database URI."
    f validate-fn FN  sym "Fully-qualified function that validates a sim (takes: uri, sim-id)."
-   s sim-id      N   int "ID of the simulation"]
+   s sim-id      N   int "ID of the simulation."]
   (if (and uri validate-fn sim-id)
     (do
       (require (symbol (namespace validate-fn)))
@@ -155,10 +159,10 @@
 
 (deftask validate-latest
   "Validate the latest sim for a given test-name."
-  [d uri         URI str "Datomic database URI (e.g. \"datomic:free://localhost:4334/sample-sim\")"
+  [d uri         URI str "Datomic database URI."
    f validate-fn FN  sym "Fully-qualified function that validates a sim (takes: uri, sim-id)."
    n test-name   VAL str "Test name to look-up sims by."
-   l lookup-fn   FN  sym "Fully-qualified function that looks up latest sim for test-name (takes: db, test-name)." ]
+   l lookup-fn   FN  sym "Fully-qualified function that looks up latest sim for test-name (takes: db, test-name)."]
   (if (and uri validate-fn test-name lookup-fn)
     (do
       (require (symbol (namespace validate-fn)))
