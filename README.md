@@ -20,7 +20,7 @@ First, add `boot-sim` to your `build.boot` dependencies and `require` the
 namespace:
 
 ```clj
-(set-env! :dependencies '[[io.homegrown/boot-sim "0.2.0"]])
+(set-env! :dependencies '[[io.homegrown/boot-sim "X.Y.Z"]])
 (require '[io.homegrown.boot-sim :refer :all])
 ```
 
